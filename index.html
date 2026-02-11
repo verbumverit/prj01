@@ -2,8 +2,9 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ITパスポート 公開問題演習（データ連携版）</title>
+    <!-- viewport設定にズーム制限を追加（任意） -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ITパスポート試験 公開問題演習</title>
     <script src="question.js"></script>
     <style>
         :root {
@@ -19,16 +20,21 @@
             --mgmt-bg: #1b5e20; --mgmt-txt: #e8f5e9;
             --tech-bg: #bf360c; --tech-txt: #ffe0b2;
         }
-        body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 15px; transition: 0.3s; margin: 0; }
+        body { 
+            font-family: sans-serif; background: var(--bg); color: var(--text); padding: 15px; 
+            transition: 0.3s; margin: 0; 
+            /* スマホでのダブルタップズームを防止 */
+            touch-action: manipulation; 
+        }
         .container { max-width: 600px; margin: 0 auto; background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); min-height: 400px; }
         .header { display: flex; justify-content: space-between; margin-bottom: 15px; gap: 5px; flex-wrap: wrap; }
-        .btn-sm { font-size: 0.75em; padding: 6px 10px; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text); border-radius: 5px; }
-        .btn-sm:disabled { opacity: 0.2; cursor: not-allowed; }
+        .btn-sm { font-size: 0.75em; padding: 6px 10px; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text); border-radius: 5px; touch-action: manipulation; }
+        .btn-sm:disabled { opacity: 0.2; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; overflow-y: auto; padding: 15px; box-sizing: border-box; }
         .modal-content { background: var(--card); margin: 0 auto; max-width: 550px; padding: 20px; border-radius: 15px; }
 
-        .list-btn { display: flex; align-items: center; padding: 12px; border: 1px solid var(--border); background: var(--card); color: var(--text); border-radius: 8px; cursor: pointer; gap: 10px; width: 100%; margin-bottom: 8px; text-align: left; }
+        .list-btn { display: flex; align-items: center; padding: 12px; border: 1px solid var(--border); background: var(--card); color: var(--text); border-radius: 8px; cursor: pointer; gap: 10px; width: 100%; margin-bottom: 8px; text-align: left; touch-action: manipulation; }
         .list-cat { font-size: 0.7em; width: 80px; flex-shrink: 0; padding: 3px 0; border-radius: 4px; text-align: center; font-weight: bold; }
         .cat-strat { background: var(--strat-bg); color: var(--strat-txt); }
         .cat-mgmt { background: var(--mgmt-bg); color: var(--mgmt-txt); }
@@ -43,12 +49,12 @@
         .progress-bar { height: 6px; background: var(--border); border-radius: 3px; margin-bottom: 15px; overflow: hidden; }
         #fill { height: 100%; background: var(--primary); width: 0%; transition: 0.4s; }
         .q-text { font-size: 1.1em; font-weight: bold; margin-bottom: 20px; line-height: 1.6; }
-        .choice { display: block; width: 100%; padding: 15px; margin: 10px 0; border: 2px solid var(--border); border-radius: 10px; background: var(--card); color: var(--text); text-align: left; cursor: pointer; }
+        .choice { display: block; width: 100%; padding: 15px; margin: 10px 0; border: 2px solid var(--border); border-radius: 10px; background: var(--card); color: var(--text); text-align: left; cursor: pointer; touch-action: manipulation; }
         .selected-choice { border-color: var(--primary); background: var(--selected); }
         .correct { border-color: var(--success) !important; background: rgba(40,167,69,0.1) !important; font-weight: bold; }
         .wrong { border-color: var(--danger) !important; background: rgba(220,53,69,0.1) !important; }
         #action-area { margin-top: 20px; text-align: center; border-top: 1px solid var(--border); padding-top: 15px; }
-        .btn-action { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 1.1em; cursor: pointer; }
+        .btn-action { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 1.1em; cursor: pointer; touch-action: manipulation; }
         #result-label { font-weight: bold; margin-bottom: 10px; height: 1.5em; font-size: 1.2em; }
     </style>
 </head>
@@ -71,7 +77,7 @@
             <button class="btn-sm" onclick="toggleModal('stats-modal')">✕ 閉じる</button>
         </div>
         <div id="stats-body"></div>
-        <button class="btn-action" style="margin-top:20px;" onclick="reset()">リセット</button>
+        <button class="btn-action" style="margin-top:20px;" onclick="reset()">記録をリセット</button>
     </div>
 </div>
 
@@ -115,24 +121,15 @@
         localStorage.setItem('ip_dark', isDark);
     }
 
-    // エクスポート機能
     function exportData() {
-        const data = {
-            idx: idx,
-            correctList: correctList,
-            answeredList: answeredList,
-            date: new Date().toISOString()
-        };
+        const data = { idx, correctList, answeredList, date: new Date().toISOString() };
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = `it_pass_status_${new Date().toLocaleDateString()}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
+        a.href = url; a.download = `it_pass_${new Date().toLocaleDateString()}.json`;
+        a.click(); URL.revokeObjectURL(url);
     }
 
-    // インポート機能
     function importData(input) {
         const file = input.files;
         if (!file) return;
@@ -140,16 +137,14 @@
         reader.onload = (e) => {
             try {
                 const data = JSON.parse(e.target.result);
-                if (confirm("回答状況を上書きしますか？")) {
-                    idx = data.idx || 0;
-                    correctList = data.correctList || [];
-                    answeredList = data.answeredList || [];
+                if (confirm("状況を読み込みますか？")) {
+                    idx = data.idx || 0; correctList = data.correctList || []; answeredList = data.answeredList || [];
                     localStorage.setItem('ip_idx', idx);
                     localStorage.setItem('ip_correct_list', JSON.stringify(correctList));
                     localStorage.setItem('ip_answered_list', JSON.stringify(answeredList));
                     location.reload();
                 }
-            } catch (err) { alert("無効なファイル形式です。"); }
+            } catch (err) { alert("形式が正しくありません。"); }
         };
         reader.readAsText(file);
     }
@@ -188,13 +183,12 @@
             let rate = ((catCorrect / c.max) * 100).toFixed(1);
             body.innerHTML += `<div class="stat-item"><div class="stat-label"><span>${c.name}</span><span>${catCorrect}/${c.max}点</span></div><div class="stat-bar-container"><div class="target-line" style="left:30%"></div><div class="stat-bar-fill" style="width:${rate}%; background:${c.color}"></div></div></div>`;
         });
-        const total = correctList.length;
-        body.innerHTML += `<div style="margin-top:20px; padding:15px; background:rgba(0,123,255,0.1); border-radius:10px; text-align:center;"><div style="font-weight:bold;">総合得点 (100点満点)</div><div style="font-size:2.5em; font-weight:bold; color:var(--primary);">${total}点</div></div>`;
+        body.innerHTML += `<div style="margin-top:20px; padding:15px; background:rgba(0,123,255,0.1); border-radius:10px; text-align:center;"><div style="font-weight:bold;">総合得点 (100点満点)</div><div style="font-size:2.5em; font-weight:bold; color:var(--primary);">${correctList.length}点</div></div>`;
         document.getElementById('stats-modal').style.display = 'block';
     }
 
     function init() {
-        if (typeof quizData === 'undefined') return;
+        if (typeof quizData === 'undefined' || quizData.length === 0) return;
         const mainBtn = document.getElementById('main-btn');
         const info = document.getElementById('info');
         const question = document.getElementById('question');
@@ -208,13 +202,10 @@
         if (idx >= quizData.length) {
             info.innerText = "演習 修了";
             document.getElementById('fill').style.width = "100%";
-            question.innerHTML = "<h2>演習終了です</h2><p>保存ボタンで結果をファイルに残せます。</p>";
+            question.innerHTML = "<h2>終了しました</h2><p>分析結果を自動表示しています。</p>";
             choices.innerHTML = "";
-            mainBtn.innerText = "結果を表示";
-            mainBtn.disabled = false;
-            mainBtn.onclick = updateStatsModal;
-            updateStatsModal();
-            return;
+            mainBtn.innerText = "結果を再表示"; mainBtn.disabled = false; mainBtn.onclick = updateStatsModal;
+            updateStatsModal(); return;
         }
 
         const q = quizData[idx];
@@ -247,8 +238,7 @@
             const isCorrect = (currentSelection === q.正解);
             isAnswerShown = true;
             if (!answeredList.includes(q.問番号)) {
-                answeredList.push(q.問番号);
-                if (isCorrect) correctList.push(q.問番号);
+                answeredList.push(q.問番号); if (isCorrect) correctList.push(q.問番号);
                 localStorage.setItem('ip_answered_list', JSON.stringify(answeredList));
                 localStorage.setItem('ip_correct_list', JSON.stringify(correctList));
             }
